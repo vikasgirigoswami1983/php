@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: php-service
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: php-app
   ports:
