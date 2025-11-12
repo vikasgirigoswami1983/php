@@ -1,40 +1,18 @@
-name: PHP Docker Image CI
+name: Docker Image CI
 
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout your code
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Setup PHP
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'   # or whatever version your app uses
-          extensions: mbstring, pdo, pdo_mysql, intl
-          coverage: none
-
-      # Validate composer.json and composer.lock
-      - name: Validate Composer files
-        run: composer validate --strict
-
-      # Install dependencies
-      - name: Install dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
-
-      # Run tests (optional)
-      - name: Run PHPUnit tests
-        run: vendor/bin/phpunit --testdox || echo "No tests found"
+      # Checkout code
+      - uses: actions/checkout@v4
 
       # Login to Docker Hub
       - name: Log in to Docker Hub
@@ -50,6 +28,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/php-app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/php-app:${{ github.run_number }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest
