@@ -12,8 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
-      - uses: actions/checkout@v4
+      # 1️⃣ Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       # 2️⃣ Log in to Docker Hub
       - name: Log in to Docker Hub
@@ -22,7 +23,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3️⃣ Build Docker image
+      # 3️⃣ Build and push Docker image
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
@@ -31,14 +32,14 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest
 
-      # 4️⃣ Save Docker image as tar file
+      # 4️⃣ Save Docker image locally as tar
       - name: Save Docker image to tar
         run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest -o my-image.tar
 
       # 5️⃣ Upload Docker image tar as artifact
       - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: my-docker-image
           path: my-image.tar
-          retention-days: 7   # optional, default is 90 days
+          retention-days: 7
