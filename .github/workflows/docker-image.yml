@@ -7,30 +7,41 @@ on:
     branches: ["main"]
 
 jobs:
-  # 1️⃣ Log in to Docker Hub
-  docker-login:
+  # 1️⃣ Checkout repository
+  checkout:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure full repository is checked out
+      - name: List files for debug
+        run: ls -al
+
+  # 2️⃣ Build and push Docker image
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
+      # Checkout code for this job (each job runs on fresh runner)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Login to Docker Hub (needed in the job that pushes)
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  # 2️⃣ Build and push Docker image
-  build-docker:
-    runs-on: ubuntu-latest
-    needs: docker-login
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+      # Optional debug: confirm Dockerfile exists
       - name: List files for debug
         run: ls -al
 
-      - name: Build Docker image
+      # Build and push Docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -43,11 +54,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-docker
     steps:
+      # Checkout code (optional here if you need context)
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Save the image as tar
       - name: Save Docker image to tar
         run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest -o my-image.tar
 
@@ -56,11 +69,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: save-docker
     steps:
+      # Checkout code (optional)
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Upload artifact
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
