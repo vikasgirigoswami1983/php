@@ -8,22 +8,32 @@ on:
     branches: ["main"]
 
 jobs:
-  build:
+  # 1️⃣ Checkout code
+  checkout:
     runs-on: ubuntu-latest
-
+    outputs:
+      repo-path: ${{ steps.repo-path.outputs.path }}
     steps:
-      # 1️⃣ Checkout repository
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
+        id: repo-path
 
-      # 2️⃣ Log in to Docker Hub
+  # 2️⃣ Log in to Docker Hub
+  docker-login:
+    runs-on: ubuntu-latest
+    needs: checkout
+    steps:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 3️⃣ Build and push Docker image
+  # 3️⃣ Build and push Docker image
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: [checkout, docker-login]
+    steps:
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
@@ -32,11 +42,19 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest
 
-      # 4️⃣ Save Docker image locally as tar
+  # 4️⃣ Save Docker image locally as tar
+  save-docker:
+    runs-on: ubuntu-latest
+    needs: build-docker
+    steps:
       - name: Save Docker image to tar
         run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest -o my-image.tar
 
-      # 5️⃣ Upload Docker image tar as artifact
+  # 5️⃣ Upload Docker image tar as artifact
+  upload-artifact:
+    runs-on: ubuntu-latest
+    needs: save-docker
+    steps:
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
