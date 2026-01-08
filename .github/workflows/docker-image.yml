@@ -1,4 +1,3 @@
-# .github/workflows/docker-build-and-save.yml
 name: Docker Build and Save Artifact
 
 on:
@@ -8,7 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  # 1️⃣ Checkout code
+  # 1️⃣ Checkout repository
   checkout:
     runs-on: ubuntu-latest
     outputs:
@@ -16,7 +15,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure full repository is checked out
         id: repo-path
+
+      - name: List files for debug
+        run: ls -al   # Confirm Dockerfile exists
 
   # 2️⃣ Log in to Docker Hub
   docker-login:
@@ -37,8 +41,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: .              # Repo root
+          file: ./Dockerfile      # Make sure file is capitalized exactly
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-image-name:latest
 
@@ -61,3 +65,5 @@ jobs:
           name: my-docker-image
           path: my-image.tar
           retention-days: 7
+
+
